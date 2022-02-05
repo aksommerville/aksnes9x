@@ -137,8 +137,8 @@ static void aksnes9x_default_settings() {
   Settings.MouseMaster=0;
   Settings.SuperScopeMaster=0;
   Settings.JustifierMaster=0;
-  Settings.MultiPlayer5Master=1;
   Settings.MacsRifleMaster=0;
+  Settings.MultiPlayer5Master=1;
   */
   
   Settings.SoundSync=0;
@@ -269,11 +269,14 @@ static int aksnes9x_main_init(void *userdata) {
   if (!Memory.Init() || !S9xInitAPU()) return -1;
   S9xInitSound(20);
   S9xSetSoundMute(TRUE);
-  if (!S9xGraphicsInit()) return -1;
+  
+  S9xSetController(0,CTL_JOYPAD,0,0,0,0);
+  S9xSetController(1,CTL_MP5,1,2,3,4);
+  S9xReportControllers();
 
   GFX.Screen=(uint16*)aksnes9x_fb;
   GFX.Pitch=SNES_WIDTH*2;
-  S9xGraphicsInit();
+  if (!S9xGraphicsInit()) return -1;
 
   return 0;
 }
@@ -331,6 +334,7 @@ int main(int argc,char **argv) {
     .audio_rate=44100,
     .audio_chanc=2,
     .audio_format=EH_AUDIO_FORMAT_S16,
+    .playerc=4,
     .appname="aksnes9x",
     .userdata=0,
     .init=aksnes9x_main_init,
