@@ -1,3 +1,9 @@
+/* aksnes9x_main.cpp
+ *
+ * Parameters:
+ *   --hardware=normal|multitap
+ */
+
 #include <string.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -21,13 +27,14 @@ static int aksnes9x_loaded=0;
 static void *aksnes9x_fb=0;
 static int16_t *aksnes9x_audiov=0;
 static int aksnes9x_audioa=0;
+static int aksnes9x_hardware=0;
 
 /* Establish input map.
  * emuhost and snes9x both provide input mapping helpers, so we definitely don't need to.
  */
  
 static int aksnes9x_map_input() {
-  for (int playerid=1;playerid<=4;playerid++) {
+  for (int playerid=1;playerid<=5;playerid++) {
     S9xMapButton((playerid<<16)|EH_BUTTON_UP,s9xjoycmd(playerid-1,SNES_UP_MASK),0);
     S9xMapButton((playerid<<16)|EH_BUTTON_DOWN,s9xjoycmd(playerid-1,SNES_DOWN_MASK),0);
     S9xMapButton((playerid<<16)|EH_BUTTON_LEFT,s9xjoycmd(playerid-1,SNES_LEFT_MASK),0);
@@ -81,6 +88,11 @@ static void aksnes9x_main_log(int level,const char *msg,int msgc) {
  */
 
 static int aksnes9x_main_load_rom(void *userdata,const char *path) {
+
+  GFX.Screen=(uint16*)aksnes9x_fb;
+  GFX.Pitch=SNES_WIDTH*2;
+  if (!S9xGraphicsInit()) return -1;
+  
   aksnes9x_save_sram();
   if (path&&path[0]) {
     printf("Open ROM: %s\n",path);
@@ -108,7 +120,7 @@ static int aksnes9x_main_load_rom(void *userdata,const char *path) {
  */
 
 static int aksnes9x_main_event(void *userdata,int playerid,int btnid,int value,int state) {
-  if ((playerid<1)||(playerid>4)) return 0;
+  if ((playerid<1)||(playerid>5)) return 0;
   if (btnid&0xffff0000) return 0;
   S9xReportButton((playerid<<16)|btnid,value);
   return 0;
@@ -138,8 +150,8 @@ static void aksnes9x_default_settings() {
   Settings.SuperScopeMaster=0;
   Settings.JustifierMaster=0;
   Settings.MacsRifleMaster=0;
-  Settings.MultiPlayer5Master=1;
   */
+  Settings.MultiPlayer5Master=1;
   
   Settings.SoundSync=0;
   Settings.SixteenBitSound=1;
@@ -265,20 +277,40 @@ static int aksnes9x_main_init(void *userdata) {
   
   S9xLoadConfigFiles(0,0);
   Settings.AutoSaveDelay=10; // Save SRAM 10 seconds after noticing it's dirty.
-  aksnes9x_default_settings();
   if (!Memory.Init() || !S9xInitAPU()) return -1;
+  aksnes9x_default_settings();
   S9xInitSound(20);
   S9xSetSoundMute(TRUE);
   
-  S9xSetController(0,CTL_JOYPAD,0,0,0,0);
-  S9xSetController(1,CTL_MP5,1,2,3,4);
-  S9xReportControllers();
-
-  GFX.Screen=(uint16*)aksnes9x_fb;
-  GFX.Pitch=SNES_WIDTH*2;
-  if (!S9xGraphicsInit()) return -1;
+  // Multitap by default. Seems most 2-player games don't mind.
+  // (but not all; eg Tetris Attack)
+  switch (aksnes9x_hardware) {
+    case CTL_JOYPAD: {
+        S9xSetController(0,CTL_JOYPAD,0,0,0,0);
+        S9xSetController(1,CTL_JOYPAD,1,1,1,1);
+        S9xReportControllers();
+      } break;
+    case CTL_MP5: default: {
+        S9xSetController(0,CTL_JOYPAD,0,0,0,0);
+        S9xSetController(1,CTL_MP5,1,2,3,4);
+        S9xReportControllers();
+      } break;
+  }
 
   return 0;
+}
+
+/* Parameter.
+ */
+ 
+static int aksnes9x_main_param(void *userdata,const char *k,int kc,const char *v,int vc) {
+  
+  if ((kc==8)&&!memcmp(k,"hardware",8)) {
+    if ((vc==6)&&!memcmp(v,"normal",6)) { aksnes9x_hardware=CTL_JOYPAD; return 0; }
+    if ((vc==8)&&!memcmp(v,"multitap",8)) { aksnes9x_hardware=CTL_MP5; return 0; }
+  }
+  
+  return -1;
 }
 
 /* Quit.
@@ -334,9 +366,10 @@ int main(int argc,char **argv) {
     .audio_rate=44100,
     .audio_chanc=2,
     .audio_format=EH_AUDIO_FORMAT_S16,
-    .playerc=4,
+    .playerc=5,
     .appname="aksnes9x",
     .userdata=0,
+    .param=aksnes9x_main_param,
     .init=aksnes9x_main_init,
     .quit=aksnes9x_main_quit,
     .update=aksnes9x_main_update,
