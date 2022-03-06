@@ -37,7 +37,7 @@ ifeq ($(UNAMES),Darwin)
 
 else ifeq ($(UNAMES),Linux)
 
-  CCWARN:=-Werror -Wno-deprecated-declarations -Wno-parentheses -Wno-constant-logical-operand
+  CCWARN:=-Werror -Wno-deprecated-declarations -Wno-parentheses -Wno-constant-logical-operand -Wno-unused-result -Wno-format-truncation
   CCOPT:=-c -MMD -O2 -Isrc -Isrc/lib -DUSE_linux=1 -DUSE_romassist=1 -I$(HDRROMASSIST)
   CC:=gcc $(CCOPT) $(CCWARN)
   CXX:=g++ $(CCOPT) $(CCWARN)
