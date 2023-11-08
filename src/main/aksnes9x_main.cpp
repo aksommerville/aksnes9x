@@ -18,7 +18,7 @@
 #include "snes9x/snes9x.h"
 
 extern "C" {
-  #include "emuhost/emuhost.h"
+  #include "emuhost.h"
 }
 
 static int akps_open_file(const char *path);
@@ -35,18 +35,18 @@ static int aksnes9x_hardware=0;
  
 static int aksnes9x_map_input() {
   for (int playerid=1;playerid<=5;playerid++) {
-    S9xMapButton((playerid<<16)|EH_BUTTON_UP,s9xjoycmd(playerid-1,SNES_UP_MASK),0);
-    S9xMapButton((playerid<<16)|EH_BUTTON_DOWN,s9xjoycmd(playerid-1,SNES_DOWN_MASK),0);
-    S9xMapButton((playerid<<16)|EH_BUTTON_LEFT,s9xjoycmd(playerid-1,SNES_LEFT_MASK),0);
-    S9xMapButton((playerid<<16)|EH_BUTTON_RIGHT,s9xjoycmd(playerid-1,SNES_RIGHT_MASK),0);
-    S9xMapButton((playerid<<16)|EH_BUTTON_A,s9xjoycmd(playerid-1,SNES_B_MASK),0);
-    S9xMapButton((playerid<<16)|EH_BUTTON_B,s9xjoycmd(playerid-1,SNES_Y_MASK),0);
-    S9xMapButton((playerid<<16)|EH_BUTTON_C,s9xjoycmd(playerid-1,SNES_A_MASK),0);
-    S9xMapButton((playerid<<16)|EH_BUTTON_D,s9xjoycmd(playerid-1,SNES_X_MASK),0);
-    S9xMapButton((playerid<<16)|EH_BUTTON_AUX1,s9xjoycmd(playerid-1,SNES_START_MASK),0);
-    S9xMapButton((playerid<<16)|EH_BUTTON_AUX2,s9xjoycmd(playerid-1,SNES_SELECT_MASK),0);
-    S9xMapButton((playerid<<16)|EH_BUTTON_L,s9xjoycmd(playerid-1,SNES_TL_MASK),0);
-    S9xMapButton((playerid<<16)|EH_BUTTON_R,s9xjoycmd(playerid-1,SNES_TR_MASK),0);
+    S9xMapButton((playerid<<16)|EH_BTN_UP,s9xjoycmd(playerid-1,SNES_UP_MASK),0);
+    S9xMapButton((playerid<<16)|EH_BTN_DOWN,s9xjoycmd(playerid-1,SNES_DOWN_MASK),0);
+    S9xMapButton((playerid<<16)|EH_BTN_LEFT,s9xjoycmd(playerid-1,SNES_LEFT_MASK),0);
+    S9xMapButton((playerid<<16)|EH_BTN_RIGHT,s9xjoycmd(playerid-1,SNES_RIGHT_MASK),0);
+    S9xMapButton((playerid<<16)|EH_BTN_SOUTH,s9xjoycmd(playerid-1,SNES_B_MASK),0);
+    S9xMapButton((playerid<<16)|EH_BTN_WEST,s9xjoycmd(playerid-1,SNES_Y_MASK),0);
+    S9xMapButton((playerid<<16)|EH_BTN_EAST,s9xjoycmd(playerid-1,SNES_A_MASK),0);
+    S9xMapButton((playerid<<16)|EH_BTN_NORTH,s9xjoycmd(playerid-1,SNES_X_MASK),0);
+    S9xMapButton((playerid<<16)|EH_BTN_AUX1,s9xjoycmd(playerid-1,SNES_START_MASK),0);
+    S9xMapButton((playerid<<16)|EH_BTN_AUX2,s9xjoycmd(playerid-1,SNES_SELECT_MASK),0);
+    S9xMapButton((playerid<<16)|EH_BTN_L1,s9xjoycmd(playerid-1,SNES_TL_MASK),0);
+    S9xMapButton((playerid<<16)|EH_BTN_R1,s9xjoycmd(playerid-1,SNES_TR_MASK),0);
   }
   return 0;
 }
@@ -82,38 +82,6 @@ static int aksnes9x_main_option(const char *k,int kc,const char *v,int vc) {
 
 static void aksnes9x_main_log(int level,const char *msg,int msgc) {
   printf("[%d] %.*s\n",level,msgc,msg);
-}
-
-/* Load ROM.
- */
-
-static int aksnes9x_main_load_rom(void *userdata,const char *path) {
-
-  GFX.Screen=(uint16*)aksnes9x_fb;
-  GFX.Pitch=SNES_WIDTH*2;
-  if (!S9xGraphicsInit()) return -1;
-  
-  aksnes9x_save_sram();
-  if (path&&path[0]) {
-    printf("Open ROM: %s\n",path);
-    aksnes9x_set_rom_path(path);
-    if (Memory.LoadROM(path)) {
-      
-      S9xDeleteCheats();
-      S9xCheatsEnable();
-      aksnes9x_load_sram();
-     
-      S9xSetSoundMute(FALSE);
-     
-      aksnes9x_loaded=1;
-      
-    } else {
-      printf("...failed\n");
-      aksnes9x_loaded=0;
-      aksnes9x_set_rom_path(0);
-    }
-  }
-  return 0;
 }
 
 /* Receive input event.
@@ -264,7 +232,7 @@ static void aksnes9x_default_settings() {
 /* Init.
  */
 
-static int aksnes9x_main_init(void *userdata) {
+static int _aksnes9x_load_file(const char *path) {
 
   const char *HOME=getenv("HOME");
   if (HOME&&HOME[0]) {
@@ -297,44 +265,63 @@ static int aksnes9x_main_init(void *userdata) {
       } break;
   }
 
+  GFX.Screen=(uint16*)aksnes9x_fb;
+  GFX.Pitch=SNES_WIDTH*2;
+  if (!S9xGraphicsInit()) return -1;
+  
+  aksnes9x_save_sram();
+  if (path&&path[0]) {
+    printf("Open ROM: %s\n",path);
+    aksnes9x_set_rom_path(path);
+    if (Memory.LoadROM(path)) {
+      
+      S9xDeleteCheats();
+      S9xCheatsEnable();
+      aksnes9x_load_sram();
+     
+      S9xSetSoundMute(FALSE);
+     
+      aksnes9x_loaded=1;
+      
+    } else {
+      printf("...failed\n");
+      aksnes9x_loaded=0;
+      aksnes9x_set_rom_path(0);
+    }
+  }
+
   return 0;
 }
 
 /* Parameter.
  */
  
-static int aksnes9x_main_param(void *userdata,const char *k,int kc,const char *v,int vc) {
+static int _aksnes9x_configure(const char *k,int kc,const char *v,int vc,int vn) {
   
   if ((kc==8)&&!memcmp(k,"hardware",8)) {
-    if ((vc==6)&&!memcmp(v,"normal",6)) { aksnes9x_hardware=CTL_JOYPAD; return 0; }
-    if ((vc==8)&&!memcmp(v,"multitap",8)) { aksnes9x_hardware=CTL_MP5; return 0; }
+    if ((vc==6)&&!memcmp(v,"normal",6)) { aksnes9x_hardware=CTL_JOYPAD; return 1; }
+    if ((vc==8)&&!memcmp(v,"multitap",8)) { aksnes9x_hardware=CTL_MP5; return 1; }
   }
   
-  return -1;
-}
-
-/* Quit.
- */
-
-static void aksnes9x_main_quit(void *userdata) {
-  S9xAutoSaveSRAM();
-  if (aksnes9x_fb) {
-    free(aksnes9x_fb);
-    aksnes9x_fb=0;
-  }
-  if (aksnes9x_audiov) free(aksnes9x_audiov);
-  aksnes9x_audiov=0;
-  aksnes9x_audioa=0;
+  return 0;
 }
 
 /* Update.
  */
  
-static int aksnes9x_main_update(void *userdata) {
+static int _aksnes9x_update(int partial) {
   
   if (!aksnes9x_loaded) {
     fprintf(stderr,"aksnes9x: No ROM loaded\n");
     return -1;
+  }
+  
+  int playerid=1; for (;playerid<=5;playerid++) {
+    uint16_t status=eh_input_get(playerid);
+    uint16_t mask=0x2000;
+    for (;mask;mask>>=1) {
+      S9xReportButton((playerid<<16)|mask,status&mask);
+    }
   }
   
   int samplec=S9xGetSampleCount();
@@ -349,7 +336,8 @@ static int aksnes9x_main_update(void *userdata) {
   
   S9xMainLoop();
 
-  if (eh_hi_frame(aksnes9x_fb,aksnes9x_audiov,samplec)<0) return -1;
+  eh_video_write(aksnes9x_fb);
+  eh_audio_write(aksnes9x_audiov,samplec>>1);
   
   return 0;
 }
@@ -358,24 +346,30 @@ static int aksnes9x_main_update(void *userdata) {
  */
 
 int main(int argc,char **argv) {
-  struct eh_hi_delegate delegate={
-    .video_rate=60,
+  struct eh_delegate delegate={
+    .name="aksnes9x",
+    .iconrgba=0,//TODO
+    .iconw=0,
+    .iconh=0,
     .video_width=SNES_WIDTH,
     .video_height=241,
-    .video_format=EH_VIDEO_FORMAT_RGB565,
+    .video_format=EH_VIDEO_FORMAT_RGB16,
+    .rmask=0xf800,
+    .gmask=0x07e0,
+    .bmask=0x001f,
+    .video_rate=60,
     .audio_rate=44100,
     .audio_chanc=2,
-    .audio_format=EH_AUDIO_FORMAT_S16,
+    .audio_format=EH_AUDIO_FORMAT_S16N,
     .playerc=5,
-    .appname="aksnes9x",
-    .userdata=0,
-    .param=aksnes9x_main_param,
-    .init=aksnes9x_main_init,
-    .quit=aksnes9x_main_quit,
-    .update=aksnes9x_main_update,
-    .player_input=aksnes9x_main_event,
-    .reset=aksnes9x_main_load_rom,
+    .configure=_aksnes9x_configure,
+    .load_file=_aksnes9x_load_file,
+    .update=_aksnes9x_update,
+    //.reset=_aksnes9x_reset,
   };
   if (!(aksnes9x_fb=calloc(delegate.video_width*2,delegate.video_height))) return -1;
-  return eh_hi_main(&delegate,argc,argv);
+  int status=eh_main(argc,argv,&delegate);
+  if (status) return status;
+  S9xAutoSaveSRAM();
+  return 0;
 }

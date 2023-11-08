@@ -3515,9 +3515,11 @@ void S9xControlPreSaveState (struct SControlSnapshot *s)
 		for (int k = 0; k < 2; k++)
 			COPY(mp5[j].pads[k]);
 
+        /* aks: is (s->internal) too small?
 	COPY(macsrifle.x);
 	COPY(macsrifle.y);
 	COPY(macsrifle.buttons);
+	/**/
 
 	assert(i == sizeof(s->internal) + sizeof(s->internal_macs));
 

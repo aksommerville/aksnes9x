@@ -5,8 +5,8 @@ PRECMD=echo "  $(@F)" ; mkdir -p $(@D) ;
 MIDDIR:=mid
 OUTDIR:=out
 
-LIBROMASSIST:=../ra2/out/linux-default/libemuhost.a
-HDRROMASSIST:=../ra2/src/
+LIBROMASSIST:=../ra3/out/libemuhost.a
+HDRROMASSIST:=../ra3/out/include
 
 UNAMES:=$(shell uname -s)
 ifeq ($(UNAMES),Darwin)

@@ -142,7 +142,8 @@ bool ConfigFile::SaveTo(const char *filename){
 	std::set<ConfigEntry, ConfigEntry::section_then_key_less> data2;
 	for(set<ConfigEntry, ConfigEntry::key_less>::iterator k=data.begin(); k!=data.end(); k++){
 		ConfigEntry e (k->line, k->section, k->key, k->val); e.comment = k->comment;
-		data2.insert(e);
+		// aks: error: static assertion failed: comparison object must be invocable as const
+		//data2.insert(e);
 	}
 #else
 	#define data2 data
@@ -212,7 +213,9 @@ bool ConfigFile::SaveTo(const char *filename){
             section=j->section;
             tmp.clear();
         }
-        tmp.insert(*j);
+        //aks: Some mysterious C++ problem here, ignoring it
+        // error: static assertion failed: comparison object must be invocable as const
+        //tmp.insert(*j);
     }
 	curConfigFile = NULL;
 
