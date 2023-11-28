@@ -43,7 +43,7 @@ else ifeq ($(UNAMES),Linux)
   CXX:=g++ $(CCOPT) $(CCWARN)
   OBJC:=gcc -xobjective-c $(CCOPT) $(CCWARN)
   LD:=g++
-  LDPOST:=$(LIBROMASSIST) -lz -lX11 -lGLX -lGLESv2 -lasound -lpthread -lm -lpulse -lpulse-simple -ldrm -lgbm -lEGL
+  LDPOST:=$(LIBROMASSIST) -lz -lX11 -lXinerama -lGLX -lGLESv2 -lasound -lpthread -lm -lpulse -lpulse-simple -ldrm -lgbm -lEGL
   OPT:=
 
   EXE:=$(OUTDIR)/aksnes9x
@@ -87,7 +87,7 @@ $(MIDDIR)/%.o:src/%.cpp|$(GENHFILES);$(PRECMD) $(CXX) -o $@ $<
 $(MIDDIR)/%.o:$(MIDDIR)/%.cpp|$(GENHFILES);$(PRECMD) $(CXX) -o $@ $<
 
 all:$(EXE) $(TEST)
-$(EXE):$(COREOFILES) $(MAINOFILES) $(OPTOFILES);$(PRECMD) $(LD) -o $@ $(COREOFILES) $(MAINOFILES) $(OPTOFILES) $(LDPOST)
+$(EXE):$(COREOFILES) $(MAINOFILES) $(OPTOFILES) $(LIBROMASSIST);$(PRECMD) $(LD) -o $@ $(COREOFILES) $(MAINOFILES) $(OPTOFILES) $(LDPOST)
 
 run:$(EXE);$(RUNCMD)
 
