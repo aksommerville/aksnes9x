@@ -132,7 +132,7 @@ static void aksnes9x_default_settings() {
   Settings.DynamicRateLimit=0; /* Multiplied by 1000 */
   Settings.InterpolationMethod=0;
   
-  Settings.SupportHiRes=1;
+  Settings.SupportHiRes=0; // If enabled, VM has the option to emit 512 columns instead of 256. Unclear how it signals that. Anyway, emuhost expects a fixed width.
   Settings.Transparency=1;
   Settings.BG_Forced=0;
   Settings.DisableGraphicWindows=0;

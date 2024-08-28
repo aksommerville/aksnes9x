@@ -120,7 +120,7 @@ void S9xGraphicsScreenResize (void)
 	IPPU.Interlace    = Memory.FillRAM[0x2133] & 1;
 	IPPU.InterlaceOBJ = Memory.FillRAM[0x2133] & 2;
 	IPPU.PseudoHires = Memory.FillRAM[0x2133] & 8;
-		
+
 	if (Settings.SupportHiRes && (PPU.BGMode == 5 || PPU.BGMode == 6 || IPPU.PseudoHires))
 	{
 		GFX.RealPPL = GFX.Pitch >> 1;
